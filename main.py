@@ -10,42 +10,25 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
-def musicLibrary():
-    songs = {
-        "xxxsong":"spotifycodefotthecode"
-    }
+def song(songName):
+    webbrowser.open(f"https://www.youtube.com/results?search_query={songName}")
 
-
-def playMusic():
-    webbrowser.open(f"https://open.spotify.com/search/{""}")
 
 def processCommand(c):
-    if "open google" in c.lower():
-        webbrowser.open("https://google.com")
-    elif "open youtube" in c.lower():
-        webbrowser.open("https://youtube.com") 
-    elif "open instagram" in c.lower():
-        webbrowser.open("https://instagram.com")   
-    elif "open netflix" in c.lower():
-        webbrowser.open("https://netflix.com")
-    elif "open facebook" in c.lower():
-        webbrowser.open("https://facebook.com")
-    elif "open linkedin" in c.lower():
-        webbrowser.open("https://linkedin.com")
-    elif "open github" in c.lower():
-        webbrowser.open("https://github.com")          
-    elif "open chatgpt" in c.lower():
-        webbrowser.open("https://chatgpt.com")  
-
-    #add your favorite songs to a musics urls to a 
-    # separate py file and use that here
+    if "open" in c.lower():
+        c = c.lower().replace("open", "").strip()
+        webbrowser.open(f"https://{c}.com")
+        speak(f"opening {c}")
+   
+        
     elif "play" in c.lower():
-       song = c.lower()
-       playMusic()                
+        songName = c.lower().replace("play", "").strip()
+        song(songName)
+              
     
 
 if __name__ == "__main__":
-    speak("Initializing AI assistant")  
+    speak("Initializing mythrah")  
     
     print("Recognizing...")
 
@@ -53,13 +36,13 @@ if __name__ == "__main__":
         while True:
             with sr.Microphone() as source:
                 print("Listening...")
-                audio = r.listen(source, timeout = 2, phrase_time_limit=1)
+                audio = r.listen(source, timeout = 5, phrase_time_limit=5)
             order = r.recognize_google(audio)
-            if(order.lower() == "ai assistant"):
+            if(order.lower() == "mitra"):
                 speak("Yes")
 
                 with sr.Microphone() as source:
-                    print("AI Assistant Active...")
+                    print("MitraAI Active...")
                     audio = r.listen(source)
                     command = r.recognize_google(audio)
 
