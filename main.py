@@ -4,12 +4,9 @@ import webbrowser
 import pyttsx3
 from decouple import config
 from datetime import datetime
-import random
 import keyboard
 
-loading_call_list = [
-    "working on it",
-    "on it",
+loading_call_list =[
     "just a second"
 ]
 
@@ -32,7 +29,25 @@ def greet():
         speak(f"Good afternoon {USER}")
     elif(hour>=16 and hour<=19):
         speak(f"good evening {USER}")
-    speak(f'{HOSTNAME} here, How may I assist you?')                        
+    speak(f"{HOSTNAME} here, how may I assist you?")  
+    print('to initialize press ctrl+alt+m')      
+
+
+listening = False    
+    
+def start_listening():
+    global listening
+    listening = True
+    print('listening...')
+
+def pause_listening():
+    global  listening
+    listening = False
+    print('shutting off') 
+    speak('shutting off')
+    
+keyboard.add_hotkey('ctrl+alt+m', start_listening)
+keyboard.add_hotkey('ctrl+alt+i', pause_listening)                        
 
 
 def speak(text):
@@ -42,69 +57,52 @@ def speak(text):
 def song(songName):
     webbrowser.open(f"https://www.youtube.com/results?search_query={songName}")
 
-
-def processCommand(c):
-    if "open" in c.lower():
-        c = c.lower().replace("open", "").strip()
-        webbrowser.open(f"https://{c}.com")
-        speak(f"opening {c}")
-   
-        
-    elif "play" in c.lower():
-        songName = c.lower().replace("play", "").strip()
-        song(songName)
-
-    elif "news" in c.lower():
-        webbrowser.open("https://www.google.com/search?q=news")
- 
-    
-
 def take_command():
-    speak("Initializing mythhra") 
-
-    greet() 
+    r = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Listening...")
         r.pause_threshold = 1
         audio = r.listen(source)
 
     try:
-        print('Recognizing...')
-        query = r.recognize_google_cloud(audio,language='en-in')
-        print(query)
-        if not 'stop' in query or 'exit' in query:
-            speak(random.choice(loading_call_list))
+        print("Recognizing....")
+        queri = r.recognize_google(audio, language='en-in')
+        print(queri)
+        if not 'exit' in queri or 'stop' in queri:
+            speak(loading_call_list)
         else:
-            speak('shutting off')
+            hour = datetime.now().hour
+            if hour >= 21 and hour < 6:
+                speak("Good night take care")
+            else:
+                speak("Have a good day")
             exit()
 
-
     except Exception:
-        speak("sorry couldn't catch that")
-        query = 'None'
-    return query
+        speak("Sorry I couldn't understand. Can you please repeat that?")
+        queri = 'None'
+    return queri
 
-listening = False
 
-def start_listening():
-    global listening
-    listening = True
-    print('listening')
-
-def pause_listening():
-    global  listening
-    listening = False
-    print('shutting off')
-
-keyboard.add_hotkey('')       
-
-if __name__ == "main":
+if __name__ == '__main__':
     greet()
     while True:
-        query1 = take_command().lower()
-        if 'how are you' in query1:
-            speak('I am absolutely fine, how about you?')
+        if listening:
+            query = take_command().lower()
+            if "how are you" in query:
+                speak("I am absolutely fine sir. What about you")  
 
+            elif "open" in query:
+                query = query.replace("open", "").strip()
+                webbrowser.open(f"https://{query}.com")
+                speak(f"opening {query}")
+        
+                
+            elif "play" in query:
+                songName = query.replace("play", "").strip()
+                song(songName)
+
+            elif "news" in query:
+                webbrowser.open("https://www.google.com/search?q=news")  
 
                
 
