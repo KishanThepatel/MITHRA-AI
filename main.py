@@ -16,12 +16,47 @@ listening = False
 r = sr.Recognizer()
 engine = pyttsx3.init()
 engine.setProperty('volume',1.5)
+r.energy_threshold = 300
 engine.setProperty('rate', 195 )
 voices = engine.getProperty('voices')
 engine.setProperty('voice',voices[1].id)
 USER = config('USER', default = 'Kishan')
 HOSTNAME = config('BOT', default = 'mythhra')
 newsApi = "386fb4f3ba594671b96b222e6121f072"
+hugging_face_api = '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'
+headers = {
+    "Authorization": f"Bearer {hugging_face_api}"
+}
+
+
+def greet():
+    hour = datetime.now().hour
+    if(hour>=6 and hour<=12):
+        speak(f"Good morning {USER}")
+    elif(hour>=12 and hour<=16):
+        speak(f"Good afternoon {USER}")
+    elif(hour>=16 and hour<=19):
+        speak(f"good evening {USER}")
+    speak(f'{HOSTNAME} here, How may I assist you?') 
+
+def query_huggingface(model: str, prompt: str):
+    api_url = f"https://api-inference.huggingface.co/models/{model}"
+    payload = {"inputs": prompt}
+    response = requests.post(api_url, headers=headers, json=payload)
+    if response.status_code == 200:
+        return response.json()[0]['generated_text']
+    else:
+        print(f"Error {response.status_code}: {response.json()}")
+        return None
+    
+def handle_user_query(user_query):
+    response = query_huggingface("Flan-T5", user_query)
+    if response:
+        print("hey:", response)
+        speak(response)  
+    else:
+        speak("I'm having trouble generating a response right now.")    
+
 
 def speak(text):
     engine.say(text)
@@ -34,15 +69,15 @@ def take_command():
     global listening
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        audio = r.listen(source, timeout=4, phrase_time_limit=3)
+        audio = r.listen(source, timeout=4, phrase_time_limit=2)
  
         try:
             queri = r.recognize_google(audio, language='en-in').lower()
-            print(f"Recognized: {queri}")
 
-            if 'mitra' in queri:
+            if 'hey' in queri:
                 listening = True
-                queri = queri.replace('mitra', "").strip()
+                print(f"Recognized: {queri}")
+                queri = queri.replace('hey', "").strip()
                 return queri
 
             if 'exit' in queri or 'stop' in queri:                                    
@@ -71,7 +106,7 @@ def handle_command(query):
         if "how are you" in query:
             speak("I am absolutely fine")  
 
-        elif 'mitra' in query:
+        elif 'hey' in query:
             speak('yes')               
 
         elif "open" in query:
@@ -93,7 +128,14 @@ def handle_command(query):
                     print(article['title'])
                     speak(article['title'])
             else:
-                speak('failed to retrieve recent news')              
+                speak('failed to retrieve recent news') 
+        else:             
+            response = query_huggingface("gpt2", query)
+            if response:
+                print("Assistant:", response)
+                speak(response)
+            else:
+                speak("I'm having trouble generating a response right now.")                                               
 
 if __name__ == '__main__':
     while True:
